@@ -1,8 +1,25 @@
 {
   "name": "chrome-storage",
+  "version": "0.0.2",
+  "authors": [
+    "Sandro Kock <sandro.kock@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/sandro-k/chrome-storage",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "src",
+    "test",
+    "tests",
+    "Gruntfile.js",
+    "package.json",
+    "*.scss"
+  ],
   "private": true,
   "dependencies": {
-    "polymer": "Polymer/polymer#master"
+    "polymer": "Polymer/polymer#~0.5.5"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^1.1.0"
