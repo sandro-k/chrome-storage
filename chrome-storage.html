@@ -1,0 +1,163 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+Element access to localStorage.  The "name" property
+is the key to the data ("value" property) stored in localStorage.
+
+`chrome-storage` automatically saves the value to localStorage when
+value is changed.  Note that if value is an object auto-save will be
+triggered only when value is a different instance.
+
+    <chrome-storage name="my-app-storage" value="{{value}}"></chrome-storage>
+
+@group Polymer Core Elements
+@element chrome-storage
+@blurb Element access to localStorage.
+@url github.io
+@categories Data
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+
+<polymer-element name="chrome-storage" attributes="name value useRaw autoSaveDisabled useChrome" hidden>
+  <script>
+
+    Polymer('chrome-storage', {
+
+      /**
+       * Fired when a value is loaded from localStorage.
+       * @event chrome-storage-load
+       */
+
+      /**
+       * The key to the data stored in localStorage.
+       *
+       * @attribute name
+       * @type string
+       * @default null
+       */
+      name: '',
+
+      /**
+       * The data associated with the specified name.
+       *
+       * @attribute value
+       * @type object
+       * @default null
+       */
+      value: null,
+
+      /**
+       * If true, the value is stored and retrieved without JSON processing.
+       *
+       * @attribute useRaw
+       * @type boolean
+       * @default false
+       */
+      useRaw: false,
+
+      /**
+       * If true, auto save is disabled.
+       *
+       * @attribute autoSaveDisabled
+       * @type boolean
+       * @default false
+       */
+      autoSaveDisabled: false,
+
+      /**
+       * If blank, use localStorage (default), if
+       * 'local', use chrome.storage.local, if 'sync' use
+       * chrome.storage.sync
+       *
+       * @attribute useChrome
+       * @type string
+       * @default null
+       */
+      useChrome: null,
+
+      valueChanged: function () {
+        if (this.loaded && !this.autoSaveDisabled) {
+          this.save();
+        }
+      },
+
+      nameChanged: function () {
+        this.load();
+      },
+
+      onAfterLoad: function (v) {
+        if (this.useRaw) {
+          this.value = v;
+        } else {
+          // localStorage has a flaw that makes it difficult to determine
+          // if a key actually exists or not (getItem returns null if the
+          // key doesn't exist, which is not distinguishable from a stored
+          // null value)
+          // however, if not `useRaw`, an (unparsed) null value unambiguously
+          // signals that there is no value in storage (a stored null value would
+          // be escaped, i.e. "null")
+          // in this case we save any non-null current (default) value
+          if (v === null) {
+            if (this.value != null) {
+              this.save();
+            }
+          } else {
+            try {
+              v = JSON.parse(v);
+            } catch (x) {
+            }
+            this.value = v;
+          }
+        }
+        this.loaded = true;
+        this.asyncFire('chrome-storage-load');
+      },
+
+
+      chromeStorageLoad: function () {
+        var chromeStorage;
+        chromeStorage = chrome.storage[this.useChrome];
+        chromeStorage.get([this.name], function (items) {
+          var v = null;
+          if (items[this.name]) {
+            v = items[this.name];
+          }
+          this.onAfterLoad(v);
+        }.bind(this));
+      },
+
+      load: function () {
+        this.chromeStorageLoad();
+      },
+
+      chromeStorageSave: function (v) {
+        var chromeStorage;
+        chromeStorage = chrome.storage[this.useChrome];
+        var nameValue = {};
+        nameValue[this.name] = v;
+        chromeStorage.set(nameValue, function () {
+        }.bind(this));
+      },
+
+      /**
+       * Saves the value to localStorage.
+       *
+       * @method save
+       */
+      save: function () {
+        var v = this.useRaw ? this.value : JSON.stringify(this.value);
+        this.chromeStorageSave(v);
+      }
+
+    });
+
+  </script>
+</polymer-element>
