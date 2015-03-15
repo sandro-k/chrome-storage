@@ -14,8 +14,7 @@
     "test",
     "tests",
     "Gruntfile.js",
-    "package.json",
-    "*.scss"
+    "package.json"
   ],
   "private": true,
   "dependencies": {
